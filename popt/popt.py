@@ -3,8 +3,9 @@ import sys
 from xml.etree import cElementTree as ET
 
 SKIPPED_ELEMENTS = ('doc', 'status', 'arguments')
-LINE = '{}'.format('-' * 79)
-DOUBLE_LINE = '{}'.format('=' * 79)
+WIDTH = 120
+LINE = '{}'.format('-' * WIDTH)
+DOUBLE_LINE = '{}'.format('=' * WIDTH)
 
 
 def popt(filename):
@@ -29,7 +30,8 @@ def print_element(element, indent):
      'kw': print_kw,
      'test': print_test,
      'suite': print_suite,
-     'msg': print_msg}.get(element.tag, print_generic_element)(element, indent)
+     'msg': print_msg,
+     'arg': print_arg}.get(element.tag, print_generic_element)(element, indent)
 
 
 def print_robot(element, indent):
@@ -38,10 +40,23 @@ def print_robot(element, indent):
 
 
 def print_msg(element, indent):
-    print('{}msg: '.format(' ' * indent))
-    for key, value in element.attrib.iteritems():
-        print('{}{}: {}'.format(' ' * (indent + 2), key, value))
-    print('{}{}'.format(' ' * (indent + 2), element.text))
+    timestamp = element.get('timestamp').split()[-1]
+    level = element.get('level')
+    if 'Arguments' in element:
+        text = 'Arguments: {}'.format(element.get('Arguments'))
+    elif 'Return' in element:
+        text = 'Return: {}'.format(element.get('Return'))
+    else:
+        text = indent_lines(element.text, indent + len(timestamp) + 2 + 5 + 2)
+    print('{:>{indent}}  {:<5}  {}'.format(timestamp, level, text, indent=indent + len(timestamp)))
+
+
+def indent_lines(text, indent):
+    text_in_lines = text.splitlines(True)
+    result = text_in_lines[0]
+    for line in text_in_lines[1:]:
+        result += '{}{}'.format(' ' * indent, line)
+    return result
 
 
 def print_kw(element, indent):
@@ -58,16 +73,18 @@ def print_suite(element, indent):
     print_suite_test_kw(element, indent)
 
 
+def print_arg(element, indent):
+    print('{:>{indent}} {}'.format('argument:', element.text, indent=(indent + len('argument:'))))
+
+
 def print_suite_test_kw(element, indent):
-    text = element.text.strip() if element.text is not None else ''
     status = element.find('status')
-    indent_text = ' ' * indent
     name = element.get('name')
-    len_of_first_part = len(indent_text + name + text)
-    padding = ' ' * (52 - len_of_first_part)
-    print('{}{} {}{}{} {}'.format(indent_text, name, text, padding,
-                                  status.get('status'), status.get('starttime')))
-    print('{}{}'.format(' ' * 58, status.get('endtime')))
+    len_of_first_part = indent + len(name)
+    padding = ' ' * (WIDTH - 26 - len_of_first_part)
+    print('{:>{indent}}{}{} {}'.format(name, padding,
+                                       status.get('status'), status.get('starttime'),
+                                       indent=indent + len(name)))
 
 
 def print_generic_element(element, indent):
