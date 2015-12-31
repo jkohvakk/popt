@@ -1,6 +1,8 @@
 from __future__ import print_function
 import sys
 from xml.etree import cElementTree as ET
+from datetime import datetime
+
 
 SKIPPED_ELEMENTS = ('doc', 'status', 'arguments')
 WIDTH = 120
@@ -79,22 +81,25 @@ def print_arg(element, indent):
 
 def print_suite_test_kw(element, indent):
     status = element.find('status')
+    starttime = status.get('starttime')
+    endtime = status.get('endtime')
+    start_dt = datetime.strptime(starttime + '000', '%Y%m%d %H:%M:%S.%f')
+    end_dt = datetime.strptime(endtime + '000', '%Y%m%d %H:%M:%S.%f')
+    duration = end_dt - start_dt
     name = element.get('name')
     len_of_first_part = indent + len(name)
     padding = ' ' * (WIDTH - 26 - len_of_first_part)
-    print('{:>{indent}}{}{} {}'.format(name, padding,
-                                       status.get('status'), status.get('starttime'),
-                                       indent=indent + len(name)))
+    print('{:>{indent}}{}{}  {}  {:0>2}.{:0<3}'.format(name, padding,
+                                                       status.get('status'), starttime.split()[-1],
+                                                       duration.seconds, duration.microseconds / 1000,
+                                                       indent=indent + len(name)))
 
 
 def print_generic_element(element, indent):
     text = element.text.strip() if element.text is not None else ''
     if element.tag not in SKIPPED_ELEMENTS:
-        print('{}{} {} {}'.format(' ' * indent, element.tag, element.attrib, text))
-
-
-def print_separator_line_for_test_and_suite(element):
-    print(DOUBLE_LINE)
+        print('{:>{indent}} {} {}'.format(element.tag, element.attrib, text,
+                                          indent=indent + len(element.tag)))
 
 
 if __name__ == '__main__':
