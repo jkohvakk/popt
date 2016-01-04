@@ -54,11 +54,8 @@ def print_msg(element, indent):
 
 
 def indent_lines(text, indent):
-    text_in_lines = text.splitlines(True)
-    result = text_in_lines[0]
-    for line in text_in_lines[1:]:
-        result += '{}{}'.format(' ' * indent, line)
-    return result
+    indent_spaces = ' ' * indent
+    return indent_spaces.join(line for line in text.splitlines(True))
 
 
 def print_kw(element, indent):
@@ -81,12 +78,11 @@ def print_arg(element, indent):
 
 def print_suite_test_kw(element, indent):
     status = element.find('status')
-    timestamp_info = format_timestamps(status)
     name = element.get('name')
     len_of_first_part = indent + len(name)
     padding = ' ' * (WIDTH - 26 - len_of_first_part)
     print('{:>{indent}}{}{}  {}'.format(name, padding,
-                                        status.get('status'), timestamp_info,
+                                        status.get('status'), format_timestamps(status),
                                         indent=indent + len(name)))
 
 
