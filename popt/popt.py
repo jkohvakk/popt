@@ -6,17 +6,23 @@ from argparse import ArgumentParser
 
 SKIPPED_ELEMENTS = ('doc', 'status', 'arguments', 'tags')
 WIDTH = 120
-LINE = '{}'.format('-' * WIDTH)
-DOUBLE_LINE = '{}'.format('=' * WIDTH)
 
 
 def popt(filename):
     tree = ET.parse(filename)
     root = tree.getroot()
 
-    print(DOUBLE_LINE)
+    print_double_line()
     print_children(root, 0)
-    print(DOUBLE_LINE)
+    print_double_line()
+
+
+def print_line():
+    print('{}'.format('-' * WIDTH))
+
+
+def print_double_line():
+    print('{}'.format('=' * WIDTH))
 
 
 def print_children(element, indent):
@@ -64,12 +70,12 @@ def print_kw(element, indent):
 
 
 def print_test(element, indent):
-    print(LINE)
+    print_line()
     print_suite_test_kw(element, indent)
 
 
 def print_suite(element, indent):
-    print(DOUBLE_LINE)
+    print_double_line()
     print_suite_test_kw(element, indent)
 
 
@@ -120,10 +126,14 @@ def read_arguments():
     p = ArgumentParser(description='Convert Robot Framework output.xml to human-readable textual log')
     p.add_argument('filename', type=str, help='Path to output.xml file')
     p.add_argument('--skip-timestamps', '-T', action='store_true', help='Omit all timestamps from textual log (helps in diffing logs)')
+    p.add_argument('--width', type=int, help='Display width in characters. Default is 120.')
     args = p.parse_args()
     if args.skip_timestamps:
         global format_timestamps
         format_timestamps = empty_format_timestamps
+    if args.width:
+        global WIDTH
+        WIDTH = args.width
     popt(args.filename)
 
 
