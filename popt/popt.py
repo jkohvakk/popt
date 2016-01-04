@@ -1,7 +1,7 @@
 from __future__ import print_function
-import sys
 from xml.etree import cElementTree as ET
 from datetime import datetime
+from argparse import ArgumentParser
 
 
 SKIPPED_ELEMENTS = ('doc', 'status', 'arguments')
@@ -81,18 +81,27 @@ def print_arg(element, indent):
 
 def print_suite_test_kw(element, indent):
     status = element.find('status')
+    timestamp_info = format_timestamps(status)
+    name = element.get('name')
+    len_of_first_part = indent + len(name)
+    padding = ' ' * (WIDTH - 26 - len_of_first_part)
+    print('{:>{indent}}{}{}  {}'.format(name, padding,
+                                        status.get('status'), timestamp_info,
+                                        indent=indent + len(name)))
+
+
+def format_timestamps(status):
     starttime = status.get('starttime')
     endtime = status.get('endtime')
     start_dt = datetime.strptime(starttime + '000', '%Y%m%d %H:%M:%S.%f')
     end_dt = datetime.strptime(endtime + '000', '%Y%m%d %H:%M:%S.%f')
     duration = end_dt - start_dt
-    name = element.get('name')
-    len_of_first_part = indent + len(name)
-    padding = ' ' * (WIDTH - 26 - len_of_first_part)
-    print('{:>{indent}}{}{}  {}  {:0>2}.{:0<3}'.format(name, padding,
-                                                       status.get('status'), starttime.split()[-1],
-                                                       duration.seconds, duration.microseconds / 1000,
-                                                       indent=indent + len(name)))
+    return '{}  {:0>2}.{:0<3}'.format(starttime.split()[-1],
+                                      duration.seconds, duration.microseconds / 1000)
+
+
+def empty_format_timestamps(status):
+    return ''
 
 
 def print_generic_element(element, indent):
@@ -102,5 +111,16 @@ def print_generic_element(element, indent):
                                           indent=indent + len(element.tag)))
 
 
+def read_arguments():
+    p = ArgumentParser(description='Convert Robot Framework output.xml to human-readable textual log')
+    p.add_argument('filename', type=str, help='Path to output.xml file')
+    p.add_argument('--skip-timestamps', '-T', action='store_true', help='Omit all timestamps from textual log (helps in diffing logs)')
+    args = p.parse_args()
+    if args.skip_timestamps:
+        global format_timestamps
+        format_timestamps = empty_format_timestamps
+    popt(args.filename)
+
+
 if __name__ == '__main__':
-    popt(sys.argv[1])
+    read_arguments()
