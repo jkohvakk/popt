@@ -4,7 +4,7 @@ from datetime import datetime
 from argparse import ArgumentParser
 
 
-SKIPPED_ELEMENTS = ('doc', 'status', 'arguments')
+SKIPPED_ELEMENTS = ('doc', 'status', 'arguments', 'tags')
 WIDTH = 120
 LINE = '{}'.format('-' * WIDTH)
 DOUBLE_LINE = '{}'.format('=' * WIDTH)
@@ -33,7 +33,8 @@ def print_element(element, indent):
      'test': print_test,
      'suite': print_suite,
      'msg': print_msg,
-     'arg': print_arg}.get(element.tag, print_generic_element)(element, indent)
+     'arg': print_arg,
+     'tag': print_tag}.get(element.tag, print_generic_element)(element, indent)
 
 
 def print_robot(element, indent):
@@ -73,7 +74,15 @@ def print_suite(element, indent):
 
 
 def print_arg(element, indent):
-    print('{:>{indent}} {}'.format('argument:', element.text, indent=(indent + len('argument:'))))
+    print_text_element(element, indent, 'arg')
+
+
+def print_tag(element, indent):
+    print_text_element(element, indent, 'tag')
+
+
+def print_text_element(element, indent, element_name):
+    print('{:>{indent}} {}'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':'))))
 
 
 def print_suite_test_kw(element, indent):
