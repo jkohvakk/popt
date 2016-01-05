@@ -12,40 +12,44 @@ def popt(filename):
     tree = ET.parse(filename)
     root = tree.getroot()
 
-    print_double_line()
-    print_children(root, 0)
-    print_double_line()
+    result = print_double_line()
+    result += print_children(root, 0)
+    result += print_double_line()
+    return result
 
 
 def print_line():
-    print('{}'.format('-' * WIDTH))
+    return '{}\n'.format('-' * WIDTH)
 
 
 def print_double_line():
-    print('{}'.format('=' * WIDTH))
+    return '{}\n'.format('=' * WIDTH)
 
 
 def print_children(element, indent):
     if element.tag == 'statistics':
-        return
-    print_element(element, indent)
+        return ''
+    result = print_element(element, indent)
     for child in element:
-        print_children(child, indent + 2)
+        result += print_children(child, indent + 2)
+    return result
 
 
 def print_element(element, indent):
-    {'robot': print_robot,
-     'kw': print_kw,
-     'test': print_test,
-     'suite': print_suite,
-     'msg': print_msg,
-     'arg': print_arg,
-     'tag': print_tag}.get(element.tag, print_generic_element)(element, indent)
+    return {'robot': print_robot,
+            'kw': print_kw,
+            'test': print_test,
+            'suite': print_suite,
+            'msg': print_msg,
+            'arg': print_arg,
+            'tag': print_tag}.get(element.tag, print_generic_element)(element, indent)
 
 
 def print_robot(element, indent):
+    result = ''
     for key, value in element.attrib.iteritems():
-        print('{}{}: {}'.format(' ' * indent, key, value))
+        result += '{}{}: {}\n'.format(' ' * indent, key, value)
+    return result
 
 
 def print_msg(element, indent):
@@ -57,7 +61,7 @@ def print_msg(element, indent):
         text = 'Return: {}'.format(element.get('Return'))
     else:
         text = indent_lines(element.text, indent + len(timestamp) + 2 + 5 + 2)
-    print('{:>{indent}}  {:<5}  {}'.format(timestamp, level, text, indent=indent + len(timestamp)))
+    return '{:>{indent}}  {:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
 
 
 def indent_lines(text, indent):
@@ -66,29 +70,31 @@ def indent_lines(text, indent):
 
 
 def print_kw(element, indent):
-    print_suite_test_kw(element, indent)
+    return print_suite_test_kw(element, indent)
 
 
 def print_test(element, indent):
-    print_line()
-    print_suite_test_kw(element, indent)
+    result = print_line()
+    result += print_suite_test_kw(element, indent)
+    return result
 
 
 def print_suite(element, indent):
-    print_double_line()
-    print_suite_test_kw(element, indent)
+    result = print_double_line()
+    result += print_suite_test_kw(element, indent)
+    return result
 
 
 def print_arg(element, indent):
-    print_text_element(element, indent, 'arg')
+    return print_text_element(element, indent, 'arg')
 
 
 def print_tag(element, indent):
-    print_text_element(element, indent, 'tag')
+    return print_text_element(element, indent, 'tag')
 
 
 def print_text_element(element, indent, element_name):
-    print('{:>{indent}} {}'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':'))))
+    return '{:>{indent}} {}\n'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':')))
 
 
 def print_suite_test_kw(element, indent):
@@ -96,9 +102,9 @@ def print_suite_test_kw(element, indent):
     name = element.get('name')
     len_of_first_part = indent + len(name)
     padding = ' ' * (WIDTH - 26 - len_of_first_part)
-    print('{:>{indent}}{}{}  {}'.format(name, padding,
-                                        status.get('status'), format_timestamps(status),
-                                        indent=indent + len(name)))
+    return '{:>{indent}}{}{}  {}\n'.format(name, padding,
+                                           status.get('status'), format_timestamps(status),
+                                           indent=indent + len(name))
 
 
 def format_timestamps(status):
@@ -117,9 +123,10 @@ def empty_format_timestamps(status):
 
 def print_generic_element(element, indent):
     text = element.text.strip() if element.text is not None else ''
-    if element.tag not in SKIPPED_ELEMENTS:
-        print('{:>{indent}} {} {}'.format(element.tag, element.attrib, text,
-                                          indent=indent + len(element.tag)))
+    if element.tag in SKIPPED_ELEMENTS:
+        return ''
+    return '{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
+                                         indent=indent + len(element.tag))
 
 
 def read_arguments():
@@ -134,7 +141,7 @@ def read_arguments():
     if args.width:
         global WIDTH
         WIDTH = args.width
-    popt(args.filename)
+    print(popt(args.filename))
 
 
 if __name__ == '__main__':
