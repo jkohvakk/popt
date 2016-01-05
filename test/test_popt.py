@@ -12,7 +12,7 @@ class TestPopt(unittest.TestCase):
     def test_golden_basic(self):
         result = popt.popt(GOLDEN_XML)
         expected = open(GOLDEN_TXT).read()
-        #self.assertEqual(expected, result)
+        self.assertEqual(expected.strip(), result.strip())
 
 
 if __name__ == "__main__":
