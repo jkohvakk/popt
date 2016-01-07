@@ -13,8 +13,7 @@ class TestGoldenPopt(unittest.TestCase):
 
     def test_golden_basic(self):
         converter = popt.RobotXmlToTextConverter()
-        popt.skip_timestamps(False, converter)
-        result = popt.print_in_plain_text(GOLDEN_XML, converter)
+        result = popt.in_plain_text(GOLDEN_XML, converter)
         expected = open(GOLDEN_TXT).read()
         self.assertEqual(expected.strip(), result.strip())
 
@@ -31,7 +30,6 @@ class TestPopt(unittest.TestCase, _WithPrintouts):
 
     def setUp(self):
         self.converter = popt.RobotXmlToTextConverter()
-        popt.skip_timestamps(False, self.converter)
 
     def test_robot(self):
         t = ET.fromstring('''<robot generated="20160105 13:37:33.973" generator="Robot 3.0 (Python 2.7.6 on linux2)">
@@ -168,7 +166,7 @@ Simple test                       PASS  10:52:37.429  00.000
 ''')
 
     def test_skip_timestamps(self):
-        popt.skip_timestamps(True, self.converter)
+        self.converter.skip_timestamps()
         t = ET.fromstring('''<kw name="Log" library="BuiltIn">
 <doc>Logs the given message with the given level.</doc>
 <arguments>

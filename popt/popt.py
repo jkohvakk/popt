@@ -4,10 +4,7 @@ from datetime import datetime
 from argparse import ArgumentParser
 
 
-SKIPPED_ELEMENTS = ('doc', 'status', 'arguments', 'tags')
-
-
-def print_in_plain_text(filename, converter):
+def in_plain_text(filename, converter):
     tree = ET.parse(filename)
     root = tree.getroot()
     return converter.convert(root)
@@ -15,8 +12,14 @@ def print_in_plain_text(filename, converter):
 
 class RobotXmlToTextConverter(object):
 
-    def __init__(self):
+    _SKIPPED_ELEMENTS = ('doc', 'status', 'arguments', 'tags')
+
+    def __init__(self, skip_timestamps=False):
         self._width = 120
+        self._timestamp_formatter = EmptyTimestampFormatter() if skip_timestamps else TimestampFormatter()
+
+    def skip_timestamps(self):
+        self._timestamp_formatter = EmptyTimestampFormatter()
 
     def set_width(self, width):
         if width:
@@ -58,16 +61,10 @@ class RobotXmlToTextConverter(object):
         return result
 
     def print_msg(self, element, indent):
-        timestamp = self.format_msg_timestamp(element)
+        timestamp = self._timestamp_formatter.msg(element)
         level = element.get('level')
         text = self.indent_lines(element.text, indent + len(timestamp) + 5 + 2)
         return '{:>{indent}}{:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
-
-    def normal_format_msg_timestamp(self, msg):
-        return msg.get('timestamp').split()[-1] + '  '
-
-    def empty_format_msg_timestamp(self, msg):
-        return ''
 
     def indent_lines(self, text, indent):
         indent_spaces = ' ' * indent
@@ -101,10 +98,23 @@ class RobotXmlToTextConverter(object):
         len_of_first_part = indent + len(name)
         padding = ' ' * (self._width - 26 - len_of_first_part)
         return '{:>{indent}}{}{}  {}\n'.format(name, padding,
-                                               status.get('status'), self.format_timestamps(status),
+                                               status.get('status'), self._timestamp_formatter.ts_and_duration(status),
                                                indent=indent + len(name))
 
-    def normal_format_timestamps(self, status):
+    def print_generic_element(self, element, indent):
+        text = element.text.strip() if element.text is not None else ''
+        if element.tag in self._SKIPPED_ELEMENTS:
+            return ''
+        return '{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
+                                             indent=indent + len(element.tag))
+
+
+class TimestampFormatter(object):
+
+    def msg(self, element):
+        return element.get('timestamp').split()[-1] + '  '
+
+    def ts_and_duration(self, status):
         starttime = status.get('starttime')
         endtime = status.get('endtime')
         start_dt = datetime.strptime(starttime + '000', '%Y%m%d %H:%M:%S.%f')
@@ -113,15 +123,14 @@ class RobotXmlToTextConverter(object):
         return '{}  {:0>2}.{:0<3}'.format(starttime.split()[-1],
                                           duration.seconds, duration.microseconds / 1000)
 
-    def empty_format_timestamps(self, status):
+
+class EmptyTimestampFormatter(object):
+
+    def msg(self, element):
         return ''
 
-    def print_generic_element(self, element, indent):
-        text = element.text.strip() if element.text is not None else ''
-        if element.tag in SKIPPED_ELEMENTS:
-            return ''
-        return '{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
-                                             indent=indent + len(element.tag))
+    def ts_and_duration(self, status):
+        return ''
 
 
 def read_arguments():
@@ -131,19 +140,9 @@ def read_arguments():
     p.add_argument('--width', type=int, help='Display width in characters. Default is 120.')
     args = p.parse_args()
 
-    converter = RobotXmlToTextConverter()
+    converter = RobotXmlToTextConverter(skip_timestamps=args.skip_timestamps)
     converter.set_width(args.width)
-    skip_timestamps(args.skip_timestamps, converter)
-    print(print_in_plain_text(args.filename), converter)
-
-
-def skip_timestamps(skip, converter):
-    if skip:
-        converter.format_timestamps = converter.empty_format_timestamps
-        converter.format_msg_timestamp = converter.empty_format_msg_timestamp
-    else:
-        converter.format_timestamps = converter.normal_format_timestamps
-        converter.format_msg_timestamp = converter.normal_format_msg_timestamp
+    print(in_plain_text(args.filename), converter)
 
 
 if __name__ == '__main__':
