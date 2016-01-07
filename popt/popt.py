@@ -55,12 +55,7 @@ def print_robot(element, indent):
 def print_msg(element, indent):
     timestamp = element.get('timestamp').split()[-1]
     level = element.get('level')
-    if 'Arguments' in element:
-        text = 'Arguments: {}'.format(element.get('Arguments'))
-    elif 'Return' in element:
-        text = 'Return: {}'.format(element.get('Return'))
-    else:
-        text = indent_lines(element.text, indent + len(timestamp) + 2 + 5 + 2)
+    text = indent_lines(element.text, indent + len(timestamp) + 2 + 5 + 2)
     return '{:>{indent}}  {:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
 
 
