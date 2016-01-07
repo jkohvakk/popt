@@ -12,8 +12,9 @@ GOLDEN_XML = os.path.join(THIS_DIR, 'golden.xml')
 class TestGoldenPopt(unittest.TestCase):
 
     def test_golden_basic(self):
-        popt.skip_timestamps(False)
-        result = popt.popt(GOLDEN_XML)
+        converter = popt.RobotXmlToTextConverter()
+        popt.skip_timestamps(False, converter)
+        result = popt.print_in_plain_text(GOLDEN_XML, converter)
         expected = open(GOLDEN_TXT).read()
         self.assertEqual(expected.strip(), result.strip())
 
@@ -29,12 +30,13 @@ class _WithPrintouts(object):
 class TestPopt(unittest.TestCase, _WithPrintouts):
 
     def setUp(self):
-        popt.skip_timestamps(False)
+        self.converter = popt.RobotXmlToTextConverter()
+        popt.skip_timestamps(False, self.converter)
 
     def test_robot(self):
         t = ET.fromstring('''<robot generated="20160105 13:37:33.973" generator="Robot 3.0 (Python 2.7.6 on linux2)">
 </robot>''')
-        self.assert_printout(popt.print_children(t, 0), '''\
+        self.assert_printout(self.converter.print_children(t, 0), '''\
 generated: 20160105 13:37:33.973
 generator: Robot 3.0 (Python 2.7.6 on linux2)
 ''')
@@ -45,7 +47,7 @@ generator: Robot 3.0 (Python 2.7.6 on linux2)
 Beautiful is better than ugly.
 Explicit is better than implicit.
 </msg>''')
-        self.assert_printout(popt.print_children(t, 4), '''\
+        self.assert_printout(self.converter.print_children(t, 4), '''\
     13:37:34.031  INFO   The Zen of Python, by Tim Peters
                          
                          Beautiful is better than ugly.
@@ -62,7 +64,7 @@ Explicit is better than implicit.
 <msg timestamp="20160105 13:37:34.030" level="INFO">We are doing some strange setup actions here!</msg>
 <status status="PASS" endtime="20160105 13:37:34.030" starttime="20160105 13:37:34.030"></status>
 </kw>''')
-        self.assert_printout(popt.print_children(t, 0), '''\
+        self.assert_printout(self.converter.print_children(t, 0), '''\
 Log                                                                                           PASS  13:37:34.030  00.000
     arg: We are doing some strange setup actions here!
   13:37:34.030  INFO   We are doing some strange setup actions here!
@@ -93,7 +95,7 @@ Log                                                                             
 <status status="PASS" endtime="20160105 13:37:34.034" starttime="20160105 13:37:34.033"></status>
 </kw>
 ''')
-        self.assert_printout(popt.print_children(t, 0), '''\
+        self.assert_printout(self.converter.print_children(t, 0), '''\
 Test 2 keyword 1                                                                              PASS  13:37:34.033  00.100
     arg: foo
     arg: bar
@@ -120,7 +122,7 @@ Test 2 keyword 1                                                                
 <status status="PASS" endtime="20160107 10:52:37.429" critical="yes" starttime="20160107 10:52:37.429"></status>
 </test>
 ''')
-        self.assert_printout(popt.print_children(t, 0), '''\
+        self.assert_printout(self.converter.print_children(t, 0), '''\
 ------------------------------------------------------------------------------------------------------------------------
 Simple test                                                                                   PASS  10:52:37.429  00.000
   Log                                                                                         PASS  10:52:37.429  00.000
@@ -136,7 +138,7 @@ Simple test                                                                     
 <status status="PASS" endtime="20160107 10:52:37.430" starttime="20160107 10:52:37.414"></status>
 </suite>
 ''')
-        self.assert_printout(popt.print_children(t, 2), '''\
+        self.assert_printout(self.converter.print_children(t, 2), '''\
 ========================================================================================================================
   Simple Suite                                                                                PASS  10:52:37.414  00.160
 ------------------------------------------------------------------------------------------------------------------------
@@ -149,25 +151,24 @@ Simple test                                                                     
 <tag>Feature2</tag>
 </tags>
 ''')
-        self.assert_printout(popt.print_children(t, 0), '''\
+        self.assert_printout(self.converter.print_children(t, 0), '''\
   tag: Feature1
   tag: Feature2
 ''')
 
     def test_setting_width(self):
-        popt.set_width(60)
+        self.converter.set_width(60)
         t = ET.fromstring('''<test id="s1-t1" name="Simple test">
 <status status="PASS" endtime="20160107 10:52:37.429" critical="yes" starttime="20160107 10:52:37.429"></status>
 </test>
 ''')
-        self.assert_printout(popt.print_children(t, 0), '''\
+        self.assert_printout(self.converter.print_children(t, 0), '''\
 ------------------------------------------------------------
 Simple test                       PASS  10:52:37.429  00.000
 ''')
-        popt.set_width(120)
 
     def test_skip_timestamps(self):
-        popt.skip_timestamps(True)
+        popt.skip_timestamps(True, self.converter)
         t = ET.fromstring('''<kw name="Log" library="BuiltIn">
 <doc>Logs the given message with the given level.</doc>
 <arguments>
@@ -176,7 +177,7 @@ Simple test                       PASS  10:52:37.429  00.000
 <msg timestamp="20160105 13:37:34.030" level="INFO">We are doing some strange setup actions here!</msg>
 <status status="PASS" endtime="20160105 13:37:34.030" starttime="20160105 13:37:34.030"></status>
 </kw>''')
-        self.assert_printout(popt.print_children(t, 0), '''\
+        self.assert_printout(self.converter.print_children(t, 0), '''\
 Log                                                                                           PASS  
     arg: We are doing some strange setup actions here!
   INFO   We are doing some strange setup actions here!

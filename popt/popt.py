@@ -5,129 +5,123 @@ from argparse import ArgumentParser
 
 
 SKIPPED_ELEMENTS = ('doc', 'status', 'arguments', 'tags')
-WIDTH = 120
-format_timestamps = None
-format_msg_timestamp = None
 
-def popt(filename):
+
+def print_in_plain_text(filename, converter):
     tree = ET.parse(filename)
     root = tree.getroot()
-
-    result = print_double_line()
-    result += print_children(root, 0)
-    result += print_double_line()
-    return result
+    return converter.convert(root)
 
 
-def print_line():
-    return '{}\n'.format('-' * WIDTH)
+class RobotXmlToTextConverter(object):
 
+    def __init__(self):
+        self._width = 120
 
-def print_double_line():
-    return '{}\n'.format('=' * WIDTH)
+    def set_width(self, width):
+        if width:
+            self._width = width
 
+    def convert(self, root):
+        result = self.print_double_line()
+        result += self.print_children(root, 0)
+        result += self.print_double_line()
+        return result
 
-def print_children(element, indent):
-    if element.tag == 'statistics':
+    def print_line(self):
+        return '{}\n'.format('-' * self._width)
+
+    def print_double_line(self):
+        return '{}\n'.format('=' * self._width)
+
+    def print_children(self, element, indent):
+        if element.tag == 'statistics':
+            return ''
+        result = self.print_element(element, indent)
+        for child in element:
+            result += self.print_children(child, indent + 2)
+        return result
+
+    def print_element(self, element, indent):
+        return {'robot': self.print_robot,
+                'kw': self.print_kw,
+                'test': self.print_test,
+                'suite': self.print_suite,
+                'msg': self.print_msg,
+                'arg': self.print_arg,
+                'tag': self.print_tag}.get(element.tag, self.print_generic_element)(element, indent)
+
+    def print_robot(self, element, indent):
+        result = ''
+        for key, value in element.attrib.iteritems():
+            result += '{}{}: {}\n'.format(' ' * indent, key, value)
+        return result
+
+    def print_msg(self, element, indent):
+        timestamp = self.format_msg_timestamp(element)
+        level = element.get('level')
+        text = self.indent_lines(element.text, indent + len(timestamp) + 5 + 2)
+        return '{:>{indent}}{:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
+
+    def normal_format_msg_timestamp(self, msg):
+        return msg.get('timestamp').split()[-1] + '  '
+
+    def empty_format_msg_timestamp(self, msg):
         return ''
-    result = print_element(element, indent)
-    for child in element:
-        result += print_children(child, indent + 2)
-    return result
 
+    def indent_lines(self, text, indent):
+        indent_spaces = ' ' * indent
+        return indent_spaces.join(line for line in text.splitlines(True))
 
-def print_element(element, indent):
-    return {'robot': print_robot,
-            'kw': print_kw,
-            'test': print_test,
-            'suite': print_suite,
-            'msg': print_msg,
-            'arg': print_arg,
-            'tag': print_tag}.get(element.tag, print_generic_element)(element, indent)
+    def print_kw(self, element, indent):
+        return self.print_suite_test_kw(element, indent)
 
+    def print_test(self, element, indent):
+        result = self.print_line()
+        result += self.print_suite_test_kw(element, indent)
+        return result
 
-def print_robot(element, indent):
-    result = ''
-    for key, value in element.attrib.iteritems():
-        result += '{}{}: {}\n'.format(' ' * indent, key, value)
-    return result
+    def print_suite(self, element, indent):
+        result = self.print_double_line()
+        result += self.print_suite_test_kw(element, indent)
+        return result
 
+    def print_arg(self, element, indent):
+        return self.print_text_element(element, indent, 'arg')
 
-def print_msg(element, indent):
-    timestamp = format_msg_timestamp(element)
-    level = element.get('level')
-    text = indent_lines(element.text, indent + len(timestamp) + 5 + 2)
-    return '{:>{indent}}{:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
+    def print_tag(self, element, indent):
+        return self.print_text_element(element, indent, 'tag')
 
-def normal_format_msg_timestamp(msg):
-    return msg.get('timestamp').split()[-1] + '  '
+    def print_text_element(self, element, indent, element_name):
+        return '{:>{indent}} {}\n'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':')))
 
-def empty_format_msg_timestamp(msg):
-    return ''
+    def print_suite_test_kw(self, element, indent):
+        status = element.find('status')
+        name = element.get('name')
+        len_of_first_part = indent + len(name)
+        padding = ' ' * (self._width - 26 - len_of_first_part)
+        return '{:>{indent}}{}{}  {}\n'.format(name, padding,
+                                               status.get('status'), self.format_timestamps(status),
+                                               indent=indent + len(name))
 
-def indent_lines(text, indent):
-    indent_spaces = ' ' * indent
-    return indent_spaces.join(line for line in text.splitlines(True))
+    def normal_format_timestamps(self, status):
+        starttime = status.get('starttime')
+        endtime = status.get('endtime')
+        start_dt = datetime.strptime(starttime + '000', '%Y%m%d %H:%M:%S.%f')
+        end_dt = datetime.strptime(endtime + '000', '%Y%m%d %H:%M:%S.%f')
+        duration = end_dt - start_dt
+        return '{}  {:0>2}.{:0<3}'.format(starttime.split()[-1],
+                                          duration.seconds, duration.microseconds / 1000)
 
-
-def print_kw(element, indent):
-    return print_suite_test_kw(element, indent)
-
-
-def print_test(element, indent):
-    result = print_line()
-    result += print_suite_test_kw(element, indent)
-    return result
-
-
-def print_suite(element, indent):
-    result = print_double_line()
-    result += print_suite_test_kw(element, indent)
-    return result
-
-
-def print_arg(element, indent):
-    return print_text_element(element, indent, 'arg')
-
-
-def print_tag(element, indent):
-    return print_text_element(element, indent, 'tag')
-
-
-def print_text_element(element, indent, element_name):
-    return '{:>{indent}} {}\n'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':')))
-
-
-def print_suite_test_kw(element, indent):
-    status = element.find('status')
-    name = element.get('name')
-    len_of_first_part = indent + len(name)
-    padding = ' ' * (WIDTH - 26 - len_of_first_part)
-    return '{:>{indent}}{}{}  {}\n'.format(name, padding,
-                                           status.get('status'), format_timestamps(status),
-                                           indent=indent + len(name))
-
-
-def normal_format_timestamps(status):
-    starttime = status.get('starttime')
-    endtime = status.get('endtime')
-    start_dt = datetime.strptime(starttime + '000', '%Y%m%d %H:%M:%S.%f')
-    end_dt = datetime.strptime(endtime + '000', '%Y%m%d %H:%M:%S.%f')
-    duration = end_dt - start_dt
-    return '{}  {:0>2}.{:0<3}'.format(starttime.split()[-1],
-                                      duration.seconds, duration.microseconds / 1000)
-
-
-def empty_format_timestamps(status):
-    return ''
-
-
-def print_generic_element(element, indent):
-    text = element.text.strip() if element.text is not None else ''
-    if element.tag in SKIPPED_ELEMENTS:
+    def empty_format_timestamps(self, status):
         return ''
-    return '{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
-                                         indent=indent + len(element.tag))
+
+    def print_generic_element(self, element, indent):
+        text = element.text.strip() if element.text is not None else ''
+        if element.tag in SKIPPED_ELEMENTS:
+            return ''
+        return '{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
+                                             indent=indent + len(element.tag))
 
 
 def read_arguments():
@@ -136,26 +130,21 @@ def read_arguments():
     p.add_argument('--skip-timestamps', '-T', action='store_true', help='Omit all timestamps from textual log (helps in diffing logs)')
     p.add_argument('--width', type=int, help='Display width in characters. Default is 120.')
     args = p.parse_args()
-    skip_timestamps(args.skip_timestamps)
-    set_width(args.width)
-    print(popt(args.filename))
+
+    converter = RobotXmlToTextConverter()
+    converter.set_width(args.width)
+    skip_timestamps(args.skip_timestamps, converter)
+    print(print_in_plain_text(args.filename), converter)
 
 
-def skip_timestamps(skip):
-    global format_timestamps
-    global format_msg_timestamp
+def skip_timestamps(skip, converter):
     if skip:
-        format_timestamps = empty_format_timestamps
-        format_msg_timestamp = empty_format_msg_timestamp
+        converter.format_timestamps = converter.empty_format_timestamps
+        converter.format_msg_timestamp = converter.empty_format_msg_timestamp
     else:
-        format_timestamps = normal_format_timestamps
-        format_msg_timestamp = normal_format_msg_timestamp
+        converter.format_timestamps = converter.normal_format_timestamps
+        converter.format_msg_timestamp = converter.normal_format_msg_timestamp
 
-
-def set_width(width):
-    if width is not None:
-        global WIDTH
-        WIDTH = width
 
 if __name__ == '__main__':
     read_arguments()
