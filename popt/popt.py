@@ -133,11 +133,14 @@ def read_arguments():
     if args.skip_timestamps:
         global format_timestamps
         format_timestamps = empty_format_timestamps
-    if args.width:
-        global WIDTH
-        WIDTH = args.width
+    set_width(args.width)
     print(popt(args.filename))
 
+
+def set_width(width):
+    if width is not None:
+        global WIDTH
+        WIDTH = width
 
 if __name__ == '__main__':
     read_arguments()

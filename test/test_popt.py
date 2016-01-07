@@ -125,6 +125,44 @@ Simple test                                                                     
     10:52:37.429  INFO   hello
 ''')
 
+    def test_suite(self):
+        t = ET.fromstring('''<suite source="/home/jkohvakk/Documents/popt/simple_suite.robot" id="s1" name="Simple Suite">
+<test id="s1-t1" name="Simple test">
+<status status="PASS" endtime="20160107 10:52:37.429" critical="yes" starttime="20160107 10:52:37.429"></status>
+</test>
+<status status="PASS" endtime="20160107 10:52:37.430" starttime="20160107 10:52:37.414"></status>
+</suite>
+''')
+        self.assert_printout(popt.print_children(t, 2), '''\
+========================================================================================================================
+  Simple Suite                                                                                PASS  10:52:37.414  00.160
+------------------------------------------------------------------------------------------------------------------------
+    Simple test                                                                               PASS  10:52:37.429  00.000
+''')
+
+    def test_tag(self):
+        t = ET.fromstring('''<tags>
+<tag>Feature1</tag>
+<tag>Feature2</tag>
+</tags>
+''')
+        self.assert_printout(popt.print_children(t, 0), '''\
+  tag: Feature1
+  tag: Feature2
+''')
+
+    def test_setting_width(self):
+        popt.set_width(60)
+        t = ET.fromstring('''<test id="s1-t1" name="Simple test">
+<status status="PASS" endtime="20160107 10:52:37.429" critical="yes" starttime="20160107 10:52:37.429"></status>
+</test>
+''')
+        self.assert_printout(popt.print_children(t, 0), '''\
+------------------------------------------------------------
+Simple test                       PASS  10:52:37.429  00.000
+''')
+        popt.set_width(120)
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
