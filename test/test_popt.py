@@ -28,6 +28,10 @@ class _WithPrintouts(object):
             differences = list(difflib.Differ().compare(expected.splitlines(True), actual.splitlines(True)))
             self.fail('\n' + ''.join(differences))
 
+    def assert_element(self, xml, text):
+        t = ET.fromstring(xml)
+        self.assert_printout(self.converter.print_children(t, 0), text)
+
 
 class TestPopt(unittest.TestCase, _WithPrintouts):
 
@@ -35,45 +39,41 @@ class TestPopt(unittest.TestCase, _WithPrintouts):
         self.converter = popt.RobotXmlToTextConverter()
 
     def test_robot(self):
-        t = ET.fromstring('''<robot generated="20160105 13:37:33.973" generator="Robot 3.0 (Python 2.7.6 on linux2)">
-</robot>''')
-        self.assert_printout(self.converter.print_children(t, 0), '''\
+        self.assert_element('''<robot generated="20160105 13:37:33.973" generator="Robot 3.0 (Python 2.7.6 on linux2)">
+</robot>''', '''\
 generated: 20160105 13:37:33.973
 generator: Robot 3.0 (Python 2.7.6 on linux2)
 ''')
 
     def test_msg_with_indenting(self):
-        t = ET.fromstring('''<msg timestamp="20160105 13:37:34.031" level="INFO">The Zen of Python, by Tim Peters
+        self.assert_element('''<msg timestamp="20160105 13:37:34.031" level="INFO">The Zen of Python, by Tim Peters
 
 Beautiful is better than ugly.
 Explicit is better than implicit.
-</msg>''')
-        self.assert_printout(self.converter.print_children(t, 4), '''\
-    13:37:34.031  INFO   The Zen of Python, by Tim Peters
-                         
-                         Beautiful is better than ugly.
-                         Explicit is better than implicit.
+</msg>''', '''\
+13:37:34.031  INFO   The Zen of Python, by Tim Peters
+                     
+                     Beautiful is better than ugly.
+                     Explicit is better than implicit.
 
 ''')
 
     def test_basic_keyword(self):
-        t = ET.fromstring('''<kw name="Log" library="BuiltIn">
+        self.assert_element('''<kw name="Log" library="BuiltIn">
 <doc>Logs the given message with the given level.</doc>
 <arguments>
 <arg>We are doing some strange setup actions here!</arg>
 </arguments>
 <msg timestamp="20160105 13:37:34.030" level="INFO">We are doing some strange setup actions here!</msg>
 <status status="PASS" endtime="20160105 13:37:34.030" starttime="20160105 13:37:34.030"></status>
-</kw>''')
-        self.assert_printout(self.converter.print_children(t, 0), '''\
+</kw>''', '''\
 Log                                                                                           PASS  13:37:34.030  00.000
     arg: We are doing some strange setup actions here!
   13:37:34.030  INFO   We are doing some strange setup actions here!
 ''')
 
-
     def test_complex_keyword(self):
-        t = ET.fromstring('''<kw name="Test 2 keyword 1">
+        self.assert_element('''<kw name="Test 2 keyword 1">
 <doc>Arguments are really ignored. I do not know why :-).</doc>
 <arguments>
 <arg>foo</arg>
@@ -95,8 +95,7 @@ Log                                                                             
 <msg timestamp="20160105 13:37:34.034" level="INFO">${foo} = foo</msg>
 <status status="PASS" endtime="20160105 13:37:34.034" starttime="20160105 13:37:34.033"></status>
 </kw>
-''')
-        self.assert_printout(self.converter.print_children(t, 0), '''\
+''', '''\
 Test 2 keyword 1                                                                              PASS  13:37:34.033  00.100
     arg: foo
     arg: bar
@@ -111,7 +110,7 @@ Test 2 keyword 1                                                                
 ''')
 
     def test_test(self):
-        t = ET.fromstring('''<test id="s1-t1" name="Simple test">
+        self.assert_element('''<test id="s1-t1" name="Simple test">
 <kw name="Log" library="BuiltIn">
 <doc>Logs the given message with the given level.</doc>
 <arguments>
@@ -122,8 +121,7 @@ Test 2 keyword 1                                                                
 </kw>
 <status status="PASS" endtime="20160107 10:52:37.429" critical="yes" starttime="20160107 10:52:37.429"></status>
 </test>
-''')
-        self.assert_printout(self.converter.print_children(t, 0), '''\
+''', '''\
 ------------------------------------------------------------------------------------------------------------------------
 Simple test                                                                                   PASS  10:52:37.429  00.000
   Log                                                                                         PASS  10:52:37.429  00.000
@@ -132,53 +130,49 @@ Simple test                                                                     
 ''')
 
     def test_suite(self):
-        t = ET.fromstring('''<suite source="/home/jkohvakk/Documents/popt/simple_suite.robot" id="s1" name="Simple Suite">
+        self.assert_element('''<suite source="/home/jkohvakk/Documents/popt/simple_suite.robot" id="s1" name="Simple Suite">
 <test id="s1-t1" name="Simple test">
 <status status="PASS" endtime="20160107 10:52:37.429" critical="yes" starttime="20160107 10:52:37.429"></status>
 </test>
 <status status="PASS" endtime="20160107 10:52:37.430" starttime="20160107 10:52:37.414"></status>
 </suite>
-''')
-        self.assert_printout(self.converter.print_children(t, 2), '''\
+''', '''\
 ========================================================================================================================
-  Simple Suite                                                                                PASS  10:52:37.414  00.160
+Simple Suite                                                                                  PASS  10:52:37.414  00.160
 ------------------------------------------------------------------------------------------------------------------------
-    Simple test                                                                               PASS  10:52:37.429  00.000
+  Simple test                                                                                 PASS  10:52:37.429  00.000
 ''')
 
     def test_tag(self):
-        t = ET.fromstring('''<tags>
+        self.assert_element('''<tags>
 <tag>Feature1</tag>
 <tag>Feature2</tag>
 </tags>
-''')
-        self.assert_printout(self.converter.print_children(t, 0), '''\
+''', '''\
   tag: Feature1
   tag: Feature2
 ''')
 
     def test_setting_width(self):
         self.converter.set_width(60)
-        t = ET.fromstring('''<test id="s1-t1" name="Simple test">
+        self.assert_element('''<test id="s1-t1" name="Simple test">
 <status status="PASS" endtime="20160107 10:52:37.429" critical="yes" starttime="20160107 10:52:37.429"></status>
 </test>
-''')
-        self.assert_printout(self.converter.print_children(t, 0), '''\
+''', '''\
 ------------------------------------------------------------
 Simple test                       PASS  10:52:37.429  00.000
 ''')
 
     def test_skip_timestamps(self):
         self.converter.skip_timestamps()
-        t = ET.fromstring('''<kw name="Log" library="BuiltIn">
+        self.assert_element('''<kw name="Log" library="BuiltIn">
 <doc>Logs the given message with the given level.</doc>
 <arguments>
 <arg>We are doing some strange setup actions here!</arg>
 </arguments>
 <msg timestamp="20160105 13:37:34.030" level="INFO">We are doing some strange setup actions here!</msg>
 <status status="PASS" endtime="20160105 13:37:34.030" starttime="20160105 13:37:34.030"></status>
-</kw>''')
-        self.assert_printout(self.converter.print_children(t, 0), '''\
+</kw>''', '''\
 Log                                                                                           PASS  
     arg: We are doing some strange setup actions here!
   INFO   We are doing some strange setup actions here!
