@@ -12,6 +12,7 @@ GOLDEN_XML = os.path.join(THIS_DIR, 'golden.xml')
 class TestGoldenPopt(unittest.TestCase):
 
     def test_golden_basic(self):
+        popt.skip_timestamps(False)
         result = popt.popt(GOLDEN_XML)
         expected = open(GOLDEN_TXT).read()
         self.assertEqual(expected.strip(), result.strip())
@@ -27,6 +28,8 @@ class _WithPrintouts(object):
 
 class TestPopt(unittest.TestCase, _WithPrintouts):
 
+    def setUp(self):
+        popt.skip_timestamps(False)
 
     def test_robot(self):
         t = ET.fromstring('''<robot generated="20160105 13:37:33.973" generator="Robot 3.0 (Python 2.7.6 on linux2)">
@@ -163,6 +166,21 @@ Simple test                       PASS  10:52:37.429  00.000
 ''')
         popt.set_width(120)
 
+    def test_skip_timestamps(self):
+        popt.skip_timestamps(True)
+        t = ET.fromstring('''<kw name="Log" library="BuiltIn">
+<doc>Logs the given message with the given level.</doc>
+<arguments>
+<arg>We are doing some strange setup actions here!</arg>
+</arguments>
+<msg timestamp="20160105 13:37:34.030" level="INFO">We are doing some strange setup actions here!</msg>
+<status status="PASS" endtime="20160105 13:37:34.030" starttime="20160105 13:37:34.030"></status>
+</kw>''')
+        self.assert_printout(popt.print_children(t, 0), '''\
+Log                                                                                           PASS  
+    arg: We are doing some strange setup actions here!
+  INFO   We are doing some strange setup actions here!
+''')
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

@@ -6,7 +6,8 @@ from argparse import ArgumentParser
 
 SKIPPED_ELEMENTS = ('doc', 'status', 'arguments', 'tags')
 WIDTH = 120
-
+format_timestamps = None
+format_msg_timestamp = None
 
 def popt(filename):
     tree = ET.parse(filename)
@@ -53,11 +54,16 @@ def print_robot(element, indent):
 
 
 def print_msg(element, indent):
-    timestamp = element.get('timestamp').split()[-1]
+    timestamp = format_msg_timestamp(element)
     level = element.get('level')
-    text = indent_lines(element.text, indent + len(timestamp) + 2 + 5 + 2)
-    return '{:>{indent}}  {:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
+    text = indent_lines(element.text, indent + len(timestamp) + 5 + 2)
+    return '{:>{indent}}{:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
 
+def normal_format_msg_timestamp(msg):
+    return msg.get('timestamp').split()[-1] + '  '
+
+def empty_format_msg_timestamp(msg):
+    return ''
 
 def indent_lines(text, indent):
     indent_spaces = ' ' * indent
@@ -102,7 +108,7 @@ def print_suite_test_kw(element, indent):
                                            indent=indent + len(name))
 
 
-def format_timestamps(status):
+def normal_format_timestamps(status):
     starttime = status.get('starttime')
     endtime = status.get('endtime')
     start_dt = datetime.strptime(starttime + '000', '%Y%m%d %H:%M:%S.%f')
@@ -130,11 +136,20 @@ def read_arguments():
     p.add_argument('--skip-timestamps', '-T', action='store_true', help='Omit all timestamps from textual log (helps in diffing logs)')
     p.add_argument('--width', type=int, help='Display width in characters. Default is 120.')
     args = p.parse_args()
-    if args.skip_timestamps:
-        global format_timestamps
-        format_timestamps = empty_format_timestamps
+    skip_timestamps(args.skip_timestamps)
     set_width(args.width)
     print(popt(args.filename))
+
+
+def skip_timestamps(skip):
+    global format_timestamps
+    global format_msg_timestamp
+    if skip:
+        format_timestamps = empty_format_timestamps
+        format_msg_timestamp = empty_format_msg_timestamp
+    else:
+        format_timestamps = normal_format_timestamps
+        format_msg_timestamp = normal_format_msg_timestamp
 
 
 def set_width(width):
