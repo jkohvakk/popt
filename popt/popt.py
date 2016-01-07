@@ -1,4 +1,5 @@
 from __future__ import print_function
+import subprocess
 from xml.etree import cElementTree as ET
 from datetime import datetime
 from argparse import ArgumentParser
@@ -15,8 +16,16 @@ class RobotXmlToTextConverter(object):
     _SKIPPED_ELEMENTS = ('doc', 'status', 'arguments', 'tags')
 
     def __init__(self, skip_timestamps=False):
-        self._width = 120
+        self._width = self._get_default_width()
         self._timestamp_formatter = EmptyTimestampFormatter() if skip_timestamps else TimestampFormatter()
+
+    def _get_default_width(self):
+        try:
+            _, width = subprocess.check_output('stty size', stderr=subprocess.STDOUT, shell=True).split()
+            width = int(width)
+        except:
+            width = 120
+        return width
 
     def skip_timestamps(self):
         self._timestamp_formatter = EmptyTimestampFormatter()
@@ -137,13 +146,13 @@ def read_arguments():
     p = ArgumentParser(description='Convert Robot Framework output.xml to human-readable textual log')
     p.add_argument('filename', type=str, help='Path to output.xml file')
     p.add_argument('--skip-timestamps', '-T', action='store_true', help='Omit all timestamps from textual log (helps in diffing logs)')
-    p.add_argument('--width', type=int, help='Display width in characters. Default is 120.')
+    p.add_argument('--width', type=int, help='Display width in characters. Default is screen width or 120.')
     args = p.parse_args()
 
     converter = RobotXmlToTextConverter(skip_timestamps=args.skip_timestamps)
     converter.set_width(args.width)
-    print(in_plain_text(args.filename), converter)
+    print(in_plain_text(args.filename, converter))
 
 
 if __name__ == '__main__':
-    read_arguments()
+    read_arguments()    

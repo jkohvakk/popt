@@ -3,6 +3,9 @@ import os
 import difflib
 import xml.etree.cElementTree as ET
 import popt
+import subprocess
+from mock import patch
+
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 GOLDEN_TXT = os.path.join(THIS_DIR, 'golden.txt')
@@ -180,6 +183,13 @@ Log                                                                             
     arg: We are doing some strange setup actions here!
   INFO   We are doing some strange setup actions here!
 ''')
+
+    @patch('popt.subprocess.check_output')
+    def test_default_width_is_by_screen_size_on_linux(self, check_output_mock):
+        check_output_mock.return_value = '40 79'
+        c = popt.RobotXmlToTextConverter()
+        self.assertEqual(c._width, 79)
+        check_output_mock.assert_called_once_with('stty size', stderr=subprocess.STDOUT, shell=True)
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
