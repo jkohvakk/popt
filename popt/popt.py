@@ -1,5 +1,6 @@
 from __future__ import print_function
 import subprocess
+import pkg_resources
 from xml.etree import cElementTree as ET
 from datetime import datetime
 from argparse import ArgumentParser
@@ -145,11 +146,16 @@ class EmptyTimestampFormatter(object):
         return ''
 
 
+def get_version():
+    return pkg_resources.get_distribution('popt').version
+
+
 def read_arguments():
     p = ArgumentParser(description='Convert Robot Framework output.xml to human-readable textual log')
     p.add_argument('filename', type=str, help='Path to output.xml file')
     p.add_argument('--skip-timestamps', '-T', action='store_true', help='Omit all timestamps from textual log (helps in diffing logs)')
     p.add_argument('--width', type=int, help='Display width in characters. Default is screen width or 120.')
+    p.add_argument('--version', '-v', action='version', help='Print version', version=get_version())
     args = p.parse_args()
 
     print(in_plain_text(args.filename, skip_timestamps=args.skip_timestamps, width=args.width))
