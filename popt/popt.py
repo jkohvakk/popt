@@ -5,7 +5,10 @@ from datetime import datetime
 from argparse import ArgumentParser
 
 
-def in_plain_text(filename, converter):
+def in_plain_text(filename, skip_timestamps=False, width=None):
+    converter = RobotXmlToTextConverter(skip_timestamps)
+    converter.set_width(width)
+
     tree = ET.parse(filename)
     root = tree.getroot()
     return converter.convert(root)
@@ -149,9 +152,7 @@ def read_arguments():
     p.add_argument('--width', type=int, help='Display width in characters. Default is screen width or 120.')
     args = p.parse_args()
 
-    converter = RobotXmlToTextConverter(skip_timestamps=args.skip_timestamps)
-    converter.set_width(args.width)
-    print(in_plain_text(args.filename, converter))
+    print(in_plain_text(args.filename, skip_timestamps=args.skip_timestamps, width=args.width))
 
 
 if __name__ == '__main__':

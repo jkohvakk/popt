@@ -12,15 +12,6 @@ GOLDEN_TXT = os.path.join(THIS_DIR, 'golden.txt')
 GOLDEN_XML = os.path.join(THIS_DIR, 'golden.xml')
 
 
-class TestGoldenPopt(unittest.TestCase):
-
-    def test_golden_basic(self):
-        converter = popt.RobotXmlToTextConverter()
-        result = popt.in_plain_text(GOLDEN_XML, converter)
-        expected = open(GOLDEN_TXT).read()
-        self.assertEqual(expected.strip(), result.strip())
-
-
 class _WithPrintouts(object):
 
     def assert_printout(self, actual, expected):
@@ -31,6 +22,14 @@ class _WithPrintouts(object):
     def assert_element(self, xml, text):
         t = ET.fromstring(xml)
         self.assert_printout(self.converter.print_children(t, 0), text)
+
+
+class TestGoldenPopt(unittest.TestCase, _WithPrintouts):
+
+    def test_golden_basic(self):
+        result = popt.in_plain_text(GOLDEN_XML)
+        expected = open(GOLDEN_TXT).read()
+        self.assert_printout(expected.strip(), result.strip())
 
 
 class TestPopt(unittest.TestCase, _WithPrintouts):
@@ -184,6 +183,7 @@ Log                                                                             
         c = popt.RobotXmlToTextConverter()
         self.assertEqual(c._width, 79)
         check_output_mock.assert_called_once_with('stty size', stderr=subprocess.STDOUT, shell=True)
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
