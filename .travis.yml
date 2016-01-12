@@ -4,7 +4,6 @@ python:
 #  - "3.5"   Temporarily disabled
 os:
   - linux
-  - osx
 install:
   - python setup.py -q install
 script:
