@@ -84,16 +84,27 @@ class RobotXmlToTextConverter(object):
         return indent_spaces.join(line for line in text.splitlines(True))
 
     def print_kw(self, element, indent):
-        return self.print_suite_test_kw(element, indent)
+        name = element.get('name')
+        library = element.get('library', '')
+        name = '{}.{}'.format(library, name) if library else name
+        return self.print_suite_test_kw(name, element, indent)
+
+    def print_suite_test_kw(self, name, element, indent):
+        len_of_first_part = indent + len(name)
+        status = element.find('status')
+        padding = ' ' * (self._width - 26 - len_of_first_part)
+        return '{:>{indent}}{}{}  {}\n'.format(name, padding,
+                                               status.get('status'), self._timestamp_formatter.ts_and_duration(status),
+                                               indent=indent + len(name))
 
     def print_test(self, element, indent):
         result = self.print_line()
-        result += self.print_suite_test_kw(element, indent)
+        result += self.print_suite_test_kw(element.get('name'), element, indent)
         return result
 
     def print_suite(self, element, indent):
         result = self.print_double_line()
-        result += self.print_suite_test_kw(element, indent)
+        result += self.print_suite_test_kw(element.get('name'), element, indent)
         return result
 
     def print_arg(self, element, indent):
@@ -104,15 +115,6 @@ class RobotXmlToTextConverter(object):
 
     def print_text_element(self, element, indent, element_name):
         return '{:>{indent}} {}\n'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':')))
-
-    def print_suite_test_kw(self, element, indent):
-        status = element.find('status')
-        name = element.get('name')
-        len_of_first_part = indent + len(name)
-        padding = ' ' * (self._width - 26 - len_of_first_part)
-        return '{:>{indent}}{}{}  {}\n'.format(name, padding,
-                                               status.get('status'), self._timestamp_formatter.ts_and_duration(status),
-                                               indent=indent + len(name))
 
     def print_generic_element(self, element, indent):
         text = element.text.strip() if element.text is not None else ''

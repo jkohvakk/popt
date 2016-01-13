@@ -29,7 +29,7 @@ class TestGoldenPopt(unittest.TestCase, _WithPrintouts):
     def test_golden_basic(self):
         result = popt.in_plain_text(GOLDEN_XML)
         expected = open(GOLDEN_TXT).read()
-        self.assert_printout(expected.strip(), result.strip())
+        self.assert_printout(result.strip(), expected.strip())
 
 
 class TestPopt(unittest.TestCase, _WithPrintouts):
@@ -66,7 +66,7 @@ Explicit is better than implicit.
 <msg timestamp="20160105 13:37:34.030" level="INFO">We are doing some strange setup actions here!</msg>
 <status status="PASS" endtime="20160105 13:37:34.030" starttime="20160105 13:37:34.030"></status>
 </kw>''', '''\
-Log                                                                                           PASS  13:37:34.030  00.000
+BuiltIn.Log                                                                                   PASS  13:37:34.030  00.000
     arg: We are doing some strange setup actions here!
   13:37:34.030  INFO   We are doing some strange setup actions here!
 ''')
@@ -102,7 +102,7 @@ Test 2 keyword 1                                                                
     arg: daa
   assign {} 
     var {} ${foo}
-  Log                                                                                         PASS  13:37:34.034  00.000
+  BuiltIn.Log                                                                                 PASS  13:37:34.034  00.000
       arg: Test 2 keyword 1
     13:37:34.034  INFO   Test 2 keyword 1
   13:37:34.034  INFO   ${foo} = foo
@@ -123,7 +123,7 @@ Test 2 keyword 1                                                                
 ''', '''\
 ------------------------------------------------------------------------------------------------------------------------
 Simple test                                                                                   PASS  10:52:37.429  00.000
-  Log                                                                                         PASS  10:52:37.429  00.000
+  BuiltIn.Log                                                                                 PASS  10:52:37.429  00.000
       arg: hello
     10:52:37.429  INFO   hello
 ''')
@@ -172,7 +172,7 @@ Simple test                       PASS  10:52:37.429  00.000
 <msg timestamp="20160105 13:37:34.030" level="INFO">We are doing some strange setup actions here!</msg>
 <status status="PASS" endtime="20160105 13:37:34.030" starttime="20160105 13:37:34.030"></status>
 </kw>''', '''\
-Log                                                                                           PASS  
+BuiltIn.Log                                                                                   PASS  
     arg: We are doing some strange setup actions here!
   INFO   We are doing some strange setup actions here!
 ''')

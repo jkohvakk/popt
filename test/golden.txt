@@ -4,13 +4,13 @@ generator: Robot 3.0 (Python 2.7.6 on linux2)
 ========================================================================================================================
   Source Of Test Xml                                                                          FAIL  13:37:33.974  00.610
     Suite setup                                                                               PASS  13:37:34.030  00.000
-      Log                                                                                     PASS  13:37:34.030  00.000
+      BuiltIn.Log                                                                             PASS  13:37:34.030  00.000
           arg: We are doing some strange setup actions here!
         13:37:34.030  INFO   We are doing some strange setup actions here!
 ------------------------------------------------------------------------------------------------------------------------
     Test 1                                                                                    PASS  13:37:34.031  00.200
       Write a long log                                                                        PASS  13:37:34.031  00.100
-        Log                                                                                   PASS  13:37:34.031  00.000
+        BuiltIn.Log                                                                           PASS  13:37:34.031  00.000
             arg: ${VERY LONG TEXT}
           13:37:34.031  INFO   The Zen of Python, by Tim Peters
                                
@@ -35,11 +35,11 @@ generator: Robot 3.0 (Python 2.7.6 on linux2)
                                Namespaces are one honking great idea -- let's do more of those!
 
       Test 1 keyword 2                                                                        PASS  13:37:34.032  00.100
-        Log                                                                                   PASS  13:37:34.032  00.000
+        BuiltIn.Log                                                                           PASS  13:37:34.032  00.000
             arg: Test 1 keyword 2
           13:37:34.032  INFO   Test 1 keyword 2
         Test 1 inner keyword                                                                  PASS  13:37:34.032  00.100
-          Log                                                                                 PASS  13:37:34.032  00.100
+          BuiltIn.Log                                                                         PASS  13:37:34.032  00.100
               arg: Test 1 inner keyword
             13:37:34.032  INFO   Test 1 inner keyword
         tag: Feature1
@@ -53,11 +53,11 @@ generator: Robot 3.0 (Python 2.7.6 on linux2)
           arg: daa
         assign {} 
           var {} ${foo}
-        Log                                                                                   PASS  13:37:34.034  00.000
+        BuiltIn.Log                                                                           PASS  13:37:34.034  00.000
             arg: Test 2 keyword 1
           13:37:34.034  INFO   Test 2 keyword 1
         13:37:34.034  INFO   ${foo} = foo
-      Should Be Equal                                                                         FAIL  13:37:34.034  00.000
+      BuiltIn.Should Be Equal                                                                 FAIL  13:37:34.034  00.000
           arg: ${foo}
           arg: bar
         13:37:34.034  FAIL   foo != bar
