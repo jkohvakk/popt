@@ -68,16 +68,16 @@ class RobotXmlToTextConverter(object):
                 'tag': self.print_tag}.get(element.tag, self.print_generic_element)(element, indent)
 
     def print_robot(self, element, indent):
-        result = ''
+        result = u''
         for key, value in element.attrib.iteritems():
-            result += '{}{}: {}\n'.format(' ' * indent, key, value)
+            result += u'{}{}: {}\n'.format(' ' * indent, key, value)
         return result
 
     def print_msg(self, element, indent):
         timestamp = self._timestamp_formatter.msg(element)
         level = element.get('level')
         text = self.indent_lines(element.text, indent + len(timestamp) + 5 + 2)
-        return '{:>{indent}}{:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
+        return u'{:>{indent}}{:<5}  {}\n'.format(timestamp, level, text, indent=indent + len(timestamp))
 
     def indent_lines(self, text, indent):
         indent_spaces = ' ' * indent
@@ -86,14 +86,14 @@ class RobotXmlToTextConverter(object):
     def print_kw(self, element, indent):
         name = element.get('name')
         library = element.get('library', '')
-        name = '{}.{}'.format(library, name) if library else name
+        name = u'{}.{}'.format(library, name) if library else name
         return self.print_suite_test_kw(name, element, indent)
 
     def print_suite_test_kw(self, name, element, indent):
         len_of_first_part = indent + len(name)
         status = element.find('status')
         padding = ' ' * (self._width - 26 - len_of_first_part)
-        return '{:>{indent}}{}{}  {}\n'.format(name, padding,
+        return u'{:>{indent}}{}{}  {}\n'.format(name, padding,
                                                status.get('status'), self._timestamp_formatter.ts_and_duration(status),
                                                indent=indent + len(name))
 
@@ -114,13 +114,13 @@ class RobotXmlToTextConverter(object):
         return self.print_text_element(element, indent, 'tag')
 
     def print_text_element(self, element, indent, element_name):
-        return '{:>{indent}} {}\n'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':')))
+        return u'{:>{indent}} {}\n'.format(element_name + ':', element.text, indent=(indent + len(element_name + ':')))
 
     def print_generic_element(self, element, indent):
         text = element.text.strip() if element.text is not None else ''
         if element.tag in self._SKIPPED_ELEMENTS:
             return ''
-        return '{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
+        return u'{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
                                              indent=indent + len(element.tag))
 
 
@@ -135,7 +135,7 @@ class TimestampFormatter(object):
         start_dt = datetime.strptime(starttime + '000', '%Y%m%d %H:%M:%S.%f')
         end_dt = datetime.strptime(endtime + '000', '%Y%m%d %H:%M:%S.%f')
         duration = end_dt - start_dt
-        return '{}  {:0>2}.{:0<3}'.format(starttime.split()[-1],
+        return u'{}  {:0>2}.{:0<3}'.format(starttime.split()[-1],
                                           duration.seconds, duration.microseconds / 1000)
 
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 import os
 import difflib
@@ -17,7 +18,7 @@ class _WithPrintouts(object):
     def assert_printout(self, actual, expected):
         if(actual != expected):
             differences = list(difflib.Differ().compare(expected.splitlines(True), actual.splitlines(True)))
-            self.fail('\n' + ''.join(differences))
+            self.fail(u'\n' + u''.join(differences))
 
     def assert_element(self, xml, text):
         t = ET.fromstring(xml)
@@ -55,6 +56,12 @@ Explicit is better than implicit.
                      Beautiful is better than ugly.
                      Explicit is better than implicit.
 
+''')
+
+    def test_msg_with_unicode(self):
+            self.assert_element(u'''<msg timestamp="20160105 13:37:34.031" level="INFO">Süper</msg>'''.encode("utf8"),
+                                u'''\
+13:37:34.031  INFO   Süper
 ''')
 
     def test_basic_keyword(self):

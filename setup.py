@@ -10,4 +10,11 @@ setup(name='popt',
       url='https://github.com/jkohvakk/popt',
       keywords=['Robot Framework', 'log'],
       classifiers=[],
-      entry_points={'console_scripts': ['popt=popt:read_arguments']})
+      extras_require={
+            'test': [
+                  'pytest',
+                  'mock',
+            ],
+      },
+      entry_points={'console_scripts': ['popt=popt:read_arguments']}
+      )
