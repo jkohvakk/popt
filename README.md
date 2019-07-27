@@ -72,3 +72,11 @@ generator: Robot 3.0 (Python 2.7.6 on linux2)
 ========================================================================================================================
 
 ```
+
+The following is useful in travis CI or similar to find out where your robot 
+tests are failing. If you use "Log Source" you be able to view the source in the 
+output.
+
+```
+"grep  --include=output.xml -Rl  FAIL . | xargs --no-run-if-empty -n 1 python2.7 popt"
+```
