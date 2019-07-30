@@ -94,8 +94,8 @@ class RobotXmlToTextConverter(object):
         status = element.find('status')
         padding = ' ' * (self._width - 26 - len_of_first_part)
         return u'{:>{indent}}{}{}  {}\n'.format(name, padding,
-                                               status.get('status'), self._timestamp_formatter.ts_and_duration(status),
-                                               indent=indent + len(name))
+                                                status.get('status'), self._timestamp_formatter.ts_and_duration(status),
+                                                indent=indent + len(name))
 
     def print_test(self, element, indent):
         result = self.print_line()
@@ -121,7 +121,7 @@ class RobotXmlToTextConverter(object):
         if element.tag in self._SKIPPED_ELEMENTS:
             return ''
         return u'{:>{indent}} {} {}\n'.format(element.tag, element.attrib, text,
-                                             indent=indent + len(element.tag))
+                                              indent=indent + len(element.tag))
 
 
 class TimestampFormatter(object):
@@ -136,7 +136,7 @@ class TimestampFormatter(object):
         end_dt = datetime.strptime(endtime + '000', '%Y%m%d %H:%M:%S.%f')
         duration = end_dt - start_dt
         return u'{}  {:0>2}.{:0<3}'.format(starttime.split()[-1],
-                                          duration.seconds, duration.microseconds / 1000)
+                                           duration.seconds, duration.microseconds / 1000)
 
 
 class EmptyTimestampFormatter(object):
@@ -164,4 +164,4 @@ def read_arguments():
 
 
 if __name__ == '__main__':
-    read_arguments()    
+    read_arguments()
